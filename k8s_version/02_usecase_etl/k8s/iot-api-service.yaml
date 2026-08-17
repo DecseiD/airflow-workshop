@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-api
+  labels:
+    app: iot-api
+spec:
+  selector:
+    app: iot-api
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP

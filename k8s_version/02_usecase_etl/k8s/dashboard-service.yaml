@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-dashboard
+  labels:
+    app: airflow-dashboard
+spec:
+  selector:
+    app: airflow-dashboard
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: ClusterIP

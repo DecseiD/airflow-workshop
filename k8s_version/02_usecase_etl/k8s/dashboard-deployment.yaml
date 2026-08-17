@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-dashboard
+  labels:
+    app: airflow-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-dashboard
+  template:
+    metadata:
+      labels:
+        app: airflow-dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: <registry>/airflow-dashboard:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80

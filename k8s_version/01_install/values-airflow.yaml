@@ -1,0 +1,90 @@
+# Airflow Helm values for AKS workshop
+# Chart: apache-airflow/airflow
+
+executor: KubernetesExecutor
+
+defaultAirflowTag: "2.10.5"
+airflowVersion: "2.10.5"
+
+createUserJob:
+  useHelmHooks: false
+
+migrateDatabaseJob:
+  useHelmHooks: false
+
+webserver:
+  replicas: 1
+  service:
+    type: ClusterIP
+  webserverConfig: |
+    import os
+    from flask_appbuilder.security.manager import AUTH_OAUTH
+
+    AUTH_TYPE = AUTH_OAUTH
+    AUTH_USER_REGISTRATION = True
+    AUTH_USER_REGISTRATION_ROLE = "Viewer"
+
+    OAUTH_PROVIDERS = [
+      {
+        "name": "azure",
+        "icon": "fa-windows",
+        "token_key": "access_token",
+        "remote_app": {
+          "client_id": os.environ.get("AZURE_CLIENT_ID"),
+          "client_secret": os.environ.get("AZURE_CLIENT_SECRET"),
+          "api_base_url": "https://graph.microsoft.com/",
+          "client_kwargs": {"scope": "openid email profile"},
+          "access_token_url": f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/v2.0/token",
+          "authorize_url": f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/v2.0/authorize",
+          "jwks_uri": f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/discovery/v2.0/keys",
+        },
+      }
+    ]
+
+ingress:
+  web:
+    enabled: true
+    ingressClassName: nginx
+    host: airflow.local
+    path: "/"
+    tls:
+      enabled: false
+
+dags:
+  persistence:
+    enabled: false
+
+logs:
+  persistence:
+    enabled: true
+    size: 5Gi
+
+postgresql:
+  enabled: true
+  auth:
+    username: airflow
+    password: airflow
+    database: airflow
+
+extraEnv:
+  - name: AZURE_TENANT_ID
+    valueFrom:
+      secretKeyRef:
+        name: airflow-entra-auth
+        key: AZURE_TENANT_ID
+  - name: AZURE_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: airflow-entra-auth
+        key: AZURE_CLIENT_ID
+  - name: AZURE_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: airflow-entra-auth
+        key: AZURE_CLIENT_SECRET
+  - name: AIRFLOW__WEBSERVER__RBAC
+    value: "True"
+  - name: AIRFLOW__CORE__AUTH_MANAGER
+    value: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+  - name: AIRFLOW_CONN_IOT_DB_CONN
+    value: postgresql://iot_user:iot_password@iot-telemetry-db.airflow.svc.cluster.local:5432/iot_telemetry

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-api
+  labels:
+    app: iot-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-api
+  template:
+    metadata:
+      labels:
+        app: iot-api
+    spec:
+      containers:
+        - name: iot-api
+          image: <registry>/iot-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000

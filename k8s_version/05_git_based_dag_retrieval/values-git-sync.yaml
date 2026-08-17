@@ -1,0 +1,29 @@
+# Overlay values for Airflow Helm chart DAG git-sync
+# Use with: -f ../01_install/values-airflow.yaml -f values-git-sync.yaml
+
+dags:
+  persistence:
+    enabled: false
+
+  gitSync:
+    enabled: true
+    repo: https://github.com/<org>/<dag-repo>.git
+    branch: main
+    rev: HEAD
+    depth: 1
+    subPath: dags
+    syncWait: 30
+
+    # For private repos, configure one auth path:
+    # credentialsSecret: airflow-git-https
+    # sshKeySecret: airflow-git-ssh
+    # knownHosts: |
+    #   github.com ssh-ed25519 AAAA...
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airflow Workshop: Live ETL Analytics Dashboard</title>
+    <meta name="description" content="Real-time Before vs After ETL dashboard for the Apache Airflow IoT Telemetry workshop. Live data from PostgreSQL via Flask API.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-card: rgba(18, 26, 43, 0.75);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --primary: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.25);
+            --accent-red: #ef4444;
+            --accent-red-glow: rgba(239, 68, 68, 0.25);
+            --accent-amber: #f59e0b;
+            --accent-green: #10b981;
+            --accent-purple: #a78bfa;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(239, 68, 68, 0.06) 0%, transparent 40%);
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            padding: 18px 28px;
+        }
+        .header-title h1 { font-size: 1.4rem; font-weight: 800; }
+        .header-title h1 span { color: var(--primary); }
+        .header-title p { font-size: 0.8rem; color: var(--text-muted); margin-top: 3px; }
+        .header-right { display: flex; align-items: center; gap: 14px; }
+        .live-badge {
+            display: flex; align-items: center; gap: 7px;
+            background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 20px; padding: 5px 14px; font-size: 0.75rem;
+            color: var(--accent-green); font-weight: 600;
+        }
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+        .refresh-btn {
+            background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3);
+            color: var(--primary); padding: 6px 16px; border-radius: 8px;
+            cursor: pointer; font-size: 0.8rem; font-weight: 600;
+            transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .refresh-btn:hover { background: rgba(56,189,248,0.2); transform: scale(1.03); }
+        .last-updated { font-size: 0.72rem; color: var(--text-muted); }
+
+        /* STAT PILLS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-pill {
+            background: var(--bg-card); backdrop-filter: blur(12px);
+            border: 1px solid var(--border-card); border-radius: 12px;
+            padding: 14px 18px; text-align: center;
+            transition: border-color 0.2s;
+        }
+        .stat-pill:hover { border-color: rgba(56,189,248,0.3); }
+        .stat-pill .val {
+            font-size: 1.8rem; font-weight: 800; line-height: 1;
+            margin-bottom: 4px;
+        }
+        .stat-pill .label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* SECTION TITLES */
+        .section-header {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; margin-bottom: 12px;
+        }
+        .section-header .badge {
+            padding: 2px 10px; border-radius: 20px; font-size: 0.68rem;
+        }
+        .before-badge { background: rgba(239,68,68,0.15); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.3); }
+        .after-badge  { background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); }
+        .maint-badge  { background: rgba(167,139,250,0.15); color: var(--accent-purple); border: 1px solid rgba(167,139,250,0.3); }
+
+        /* TWO COLUMN LAYOUT */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .card {
+            background: var(--bg-card); backdrop-filter: blur(12px);
+            border: 1px solid var(--border-card); border-radius: 16px;
+            padding: 20px;
+        }
+
+        /* RAW LOG TABLE */
+        .log-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
+        .log-table th { text-align: left; padding: 6px 10px; color: var(--text-muted); border-bottom: 1px solid var(--border-card); font-size: 0.68rem; text-transform: uppercase; }
+        .log-table td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+        .log-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .log-body { max-height: 280px; overflow-y: auto; display: block; }
+        .log-body::-webkit-scrollbar { width: 4px; }
+        .log-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .processed-no { color: var(--accent-red); }
+        .processed-yes { color: var(--accent-green); }
+        .temp-critical { color: var(--accent-red); font-weight: 700; }
+        .temp-high { color: var(--accent-amber); font-weight: 600; }
+        .temp-ok { color: var(--text-muted); }
+
+        /* METRIC CARDS */
+        .metric-cards { display: flex; flex-direction: column; gap: 10px; }
+        .metric-card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-card);
+            border-radius: 12px; padding: 14px 18px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: border-color 0.2s;
+        }
+        .metric-card:hover { border-color: rgba(56,189,248,0.25); }
+        .metric-card .device { font-weight: 700; font-size: 0.85rem; margin-bottom: 2px; }
+        .metric-card .location { font-size: 0.72rem; color: var(--text-muted); }
+        .metric-card .temps { text-align: right; }
+        .metric-card .avg { font-size: 1.3rem; font-weight: 800; }
+        .metric-card .range { font-size: 0.68rem; color: var(--text-muted); }
+        .metric-card .readings-badge {
+            background: rgba(56,189,248,0.1); color: var(--primary);
+            border-radius: 20px; padding: 2px 10px; font-size: 0.68rem; font-weight: 600;
+        }
+
+        /* CHART */
+        .chart-container { position: relative; height: 260px; }
+
+        /* ALERTS */
+        .alerts-grid { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
+        .alert-card {
+            border-radius: 10px; padding: 12px 16px;
+            display: flex; align-items: center; gap: 14px;
+            border: 1px solid;
+        }
+        .alert-warning { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); }
+        .alert-info    { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3); }
+        .alert-icon { font-size: 1.5rem; }
+        .alert-device { font-weight: 700; font-size: 0.85rem; }
+        .alert-detail { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+        .alert-temp { font-size: 1.1rem; font-weight: 800; color: var(--accent-red); }
+        .empty-state { text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 30px; }
+
+        /* MAINTENANCE TABLE */
+        .maint-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .maint-table th { text-align: left; padding: 8px 12px; color: var(--text-muted); border-bottom: 1px solid var(--border-card); font-size: 0.68rem; text-transform: uppercase; }
+        .maint-table td { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .maint-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .risk-critical { color: var(--accent-red); font-weight: 700; }
+        .risk-high     { color: var(--accent-amber); font-weight: 700; }
+        .risk-medium   { color: var(--primary); font-weight: 600; }
+        .risk-normal   { color: var(--accent-green); }
+        .priority-bar-wrap { width: 80px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; }
+        .priority-bar { height: 6px; border-radius: 3px; }
+
+        /* SPINNER */
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* LOADING OVERLAY */
+        .loading { opacity: 0.4; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-title">
+        <h1>⚡ IoT Telemetry <span>ETL Pipeline</span> — Live Dashboard</h1>
+        <p>Apache Airflow Workshop · Before vs After State · Real-time PostgreSQL Data</p>
+    </div>
+    <div class="header-right">
+        <div class="live-badge"><div class="live-dot"></div>LIVE DATA</div>
+        <span class="last-updated" id="last-updated-ts">Loading...</span>
+        <button class="refresh-btn" onclick="loadAll()">⟳ Refresh</button>
+    </div>
+</div>
+
+<!-- STAT PILLS -->
+<div class="stats-row" id="stats-row">
+    <div class="stat-pill"><div class="val" style="color:var(--primary)">—</div><div class="label">Raw Readings</div></div>
+    <div class="stat-pill"><div class="val" style="color:var(--accent-amber)">—</div><div class="label">Unprocessed</div></div>
+    <div class="stat-pill"><div class="val" style="color:var(--accent-red)">—</div><div class="label">Alerts Fired</div></div>
+    <div class="stat-pill"><div class="val" style="color:var(--accent-purple)">—</div><div class="label">Open Tickets</div></div>
+    <div class="stat-pill"><div class="val" style="color:var(--accent-green)">—</div><div class="label">Active Devices</div></div>
+</div>
+
+<!-- BEFORE / AFTER -->
+<div class="two-col">
+
+    <!-- BEFORE: RAW LOG -->
+    <div class="card" id="raw-card">
+        <div class="section-header">
+            <span class="badge before-badge">BEFORE AIRFLOW</span>
+            Raw Sensor Log — Unstructured
+        </div>
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>Device</th><th>Location</th>
+                    <th>Temp</th><th>Humidity</th><th>Battery</th>
+                    <th>Processed</th><th>Timestamp</th>
+                </tr>
+            </thead>
+        </table>
+        <div class="log-body">
+            <table class="log-table" id="raw-table-body" style="width:100%">
+                <tbody><tr><td colspan="7" class="empty-state"><span class="spinner"></span>Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- AFTER: METRIC CARDS -->
+    <div class="card" id="metrics-card">
+        <div class="section-header">
+            <span class="badge after-badge">AFTER AIRFLOW</span>
+            Aggregated Device Metrics
+        </div>
+        <div class="metric-cards" id="metrics-container">
+            <div class="empty-state"><span class="spinner"></span>Loading...</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- CHART + ALERTS -->
+<div class="two-col">
+
+    <!-- TEMP CHART -->
+    <div class="card">
+        <div class="section-header">
+            <span class="badge after-badge">PROCESSED</span>
+            Temperature Profiles per Device
+        </div>
+        <div class="chart-container">
+            <canvas id="tempChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="card">
+        <div class="section-header">
+            <span class="badge before-badge">⚠ ALERTS</span>
+            Threshold Violations (&gt;75°C)
+        </div>
+        <div class="alerts-grid" id="alerts-container">
+            <div class="empty-state"><span class="spinner"></span>Loading...</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MAINTENANCE QUEUE -->
+<div class="card" style="margin-bottom:0">
+    <div class="section-header">
+        <span class="badge maint-badge">MODULE 04</span>
+        Maintenance Queue — manual_sensor_maintenance_classifier DAG Output
+    </div>
+    <table class="maint-table">
+        <thead>
+            <tr>
+                <th>#</th><th>Device</th><th>Location</th><th>Temp</th>
+                <th>Risk Level</th><th>Priority</th><th>Recommended Action</th><th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="maint-tbody">
+            <tr><td colspan="8" class="empty-state"><span class="spinner"></span>Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // API base URL:
+    // 2) default: same host as dashboard, port 5000
+    const API = (() => {
+        const override = new URLSearchParams(window.location.search).get('api');
+        const base = override || `${window.location.protocol}//${window.location.hostname}:5000`;
+        return base.replace(/\/$/, '');
+    })();
+    let tempChart = null;
+
+    // ---------- FETCH HELPERS ----------
+    async function fetchJSON(path) {
+        const res = await fetch(API + path);
+        if (!res.ok) throw new Error(`API error ${res.status} on ${path}`);
+        return res.json();
+    }
+
+    // ---------- STATS ----------
+    async function loadStats() {
+        try {
+            const s = await fetchJSON('/api/stats');
+            const pills = document.querySelectorAll('#stats-row .stat-pill .val');
+            pills[0].textContent = s.total_raw_readings;
+            pills[1].textContent = s.unprocessed_readings;
+            pills[2].textContent = s.total_alerts;
+            pills[3].textContent = s.open_maintenance_tickets;
+            pills[4].textContent = s.active_devices;
+        } catch(e) { console.warn('Stats error', e); }
+    }
+
+    // ---------- RAW READINGS ----------
+    function tempClass(t) {
+        if (t >= 85) return 'temp-critical';
+        if (t >= 75) return 'temp-high';
+        return 'temp-ok';
+    }
+
+    async function loadRaw() {
+        try {
+            const rows = await fetchJSON('/api/raw-readings');
+            const tbody = document.querySelector('#raw-table-body tbody');
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No data yet — run add_sensor_data.py</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map(r => `
+                <tr>
+                    <td>${r.device_id}</td>
+                    <td>${r.location}</td>
+                    <td class="${tempClass(r.temperature_celsius)}">${r.temperature_celsius}°C</td>
+                    <td>${r.humidity_pct}%</td>
+                    <td>${r.battery_pct}%</td>
+                    <td class="${r.processed ? 'processed-yes' : 'processed-no'}">${r.processed ? '✓ yes' : '✗ no'}</td>
+                    <td style="color:var(--text-muted)">${r.reading_timestamp}</td>
+                </tr>
+            `).join('');
+        } catch(e) {
+            document.querySelector('#raw-table-body tbody').innerHTML =
+                '<tr><td colspan="7" class="empty-state">⚠ API unavailable</td></tr>';
+        }
+    }
+
+    // ---------- METRICS ----------
+    function tempColor(t) {
+        if (t >= 85) return 'var(--accent-red)';
+        if (t >= 75) return 'var(--accent-amber)';
+        return 'var(--primary)';
+    }
+
+    async function loadMetrics() {
+        try {
+            const rows = await fetchJSON('/api/metrics');
+            const el = document.getElementById('metrics-container');
+            if (!rows.length) {
+                el.innerHTML = '<div class="empty-state">No metrics yet — trigger <strong>iot_telemetry_etl</strong> DAG first</div>';
+                return;
+            }
+            el.innerHTML = rows.map(r => `
+                <div class="metric-card">
+                    <div>
+                        <div class="device">${r.device_id}</div>
+                        <div class="location">📍 ${r.location}</div>
+                    </div>
+                    <div class="temps">
+                        <div class="avg" style="color:${tempColor(r.avg_temperature)}">${r.avg_temperature}°C</div>
+                        <div class="range">↑${r.max_temperature}° ↓${r.min_temperature}°</div>
+                    </div>
+                    <div class="readings-badge">${r.total_readings} readings</div>
+                </div>
+            `).join('');
+        } catch(e) {
+            document.getElementById('metrics-container').innerHTML =
+                '<div class="empty-state">⚠ API unavailable</div>';
+        }
+    }
+
+    // ---------- CHART ----------
+    async function loadChart() {
+        try {
+            const metrics = await fetchJSON('/api/metrics');
+            const raw = await fetchJSON('/api/raw-readings');
+            const ctx = document.getElementById('tempChart').getContext('2d');
+
+            const COLORS = ['#38bdf8','#f59e0b','#ef4444','#a78bfa','#10b981'];
+
+            // Group raw readings per device for sparkline
+            const deviceMap = {};
+            raw.forEach(r => {
+                if (!deviceMap[r.device_id]) deviceMap[r.device_id] = [];
+                deviceMap[r.device_id].push(r.temperature_celsius);
+            });
+
+            const devices = Object.keys(deviceMap);
+            const maxLen = Math.max(...devices.map(d => deviceMap[d].length));
+            const labels = Array.from({length: maxLen}, (_, i) => `Reading ${i+1}`);
+
+            const datasets = devices.map((d, i) => ({
+                label: d,
+                data: deviceMap[d],
+                borderColor: COLORS[i % COLORS.length],
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 4,
+                tension: 0.4,
+            }));
+
+            if (tempChart) tempChart.destroy();
+            tempChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#9ca3af', font: { size: 11 } } },
+                        annotation: {},
+                    },
+                    scales: {
+                        x: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                        y: {
+                            ticks: { color: '#6b7280', font: { size: 10 }, callback: v => v + '°C' },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                            min: 0,
+                        }
+                    }
+                }
+            });
+
+            // Draw 75°C threshold line manually
+            Chart.register({
+                id: 'threshold',
+                afterDraw(chart) {
+                    const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+                    const yPos = y.getPixelForValue(75);
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(left, yPos); ctx.lineTo(right, yPos);
+                    ctx.setLineDash([6, 4]);
+                    ctx.strokeStyle = 'rgba(239,68,68,0.6)';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(239,68,68,0.8)';
+                    ctx.font = '10px Inter';
+                    ctx.fillText('⚠ 75°C Threshold', right - 110, yPos - 5);
+                    ctx.restore();
+                }
+            });
+        } catch(e) { console.warn('Chart error', e); }
+    }
+
+    // ---------- ALERTS ----------
+    async function loadAlerts() {
+        try {
+            const rows = await fetchJSON('/api/alerts');
+            const el = document.getElementById('alerts-container');
+            if (!rows.length) {
+                el.innerHTML = '<div class="empty-state">✅ No alerts — trigger iot_telemetry_etl DAG to process readings</div>';
+                return;
+            }
+            el.innerHTML = rows.map(r => `
+                <div class="alert-card ${r.severity === 'CRITICAL' ? 'alert-info' : 'alert-warning'}">
+                    <div class="alert-icon">${r.severity === 'CRITICAL' ? '🔴' : '⚠️'}</div>
+                    <div style="flex:1">
+                        <div class="alert-device">${r.device_id}</div>
+                        <div class="alert-detail">${r.alert_type.replace('_',' ')} · threshold ${r.threshold_value}°C · ${r.triggered_at}</div>
+                    </div>
+                    <div class="alert-temp">${r.metric_value}°C</div>
+                </div>
+            `).join('');
+        } catch(e) {
+            document.getElementById('alerts-container').innerHTML =
+                '<div class="empty-state">⚠ API unavailable</div>';
+        }
+    }
+
+    // ---------- MAINTENANCE ----------
+    function riskClass(r) {
+        return { CRITICAL: 'risk-critical', HIGH: 'risk-high', MEDIUM: 'risk-medium', NORMAL: 'risk-normal' }[r] || '';
+    }
+    function priorityColor(p) {
+        if (p >= 100) return 'var(--accent-red)';
+        if (p >= 75)  return 'var(--accent-amber)';
+        if (p >= 50)  return 'var(--primary)';
+        return 'var(--accent-green)';
+    }
+
+    async function loadMaintenance() {
+        try {
+            const rows = await fetchJSON('/api/maintenance');
+            const tbody = document.getElementById('maint-tbody');
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No maintenance tickets yet — trigger <strong>manual_sensor_maintenance_classifier</strong> DAG (Module 04)</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map((r, i) => `
+                <tr>
+                    <td style="color:var(--text-muted)">${i+1}</td>
+                    <td style="font-weight:600">${r.device_id}</td>
+                    <td style="color:var(--text-muted)">${r.location}</td>
+                    <td class="${tempClass(r.current_temp)}">${r.current_temp}°C</td>
+                    <td class="${riskClass(r.risk_level)}">${r.risk_level}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div class="priority-bar-wrap">
+                                <div class="priority-bar" style="width:${r.priority_score}%;background:${priorityColor(r.priority_score)}"></div>
+                            </div>
+                            <span style="font-size:0.75rem;font-weight:700;color:${priorityColor(r.priority_score)}">${r.priority_score}</span>
+                        </div>
+                    </td>
+                    <td style="font-size:0.72rem;color:var(--text-muted)">${r.recommended_action}</td>
+                    <td><span style="background:rgba(16,185,129,0.1);color:var(--accent-green);border-radius:20px;padding:2px 10px;font-size:0.68rem">${r.status}</span></td>
+                </tr>
+            `).join('');
+        } catch(e) {
+            document.getElementById('maint-tbody').innerHTML =
+                '<tr><td colspan="8" class="empty-state">⚠ API unavailable</td></tr>';
+        }
+    }
+
+    // ---------- LOAD ALL ----------
+    async function loadAll() {
+        document.getElementById('last-updated-ts').textContent = 'Refreshing…';
+        await Promise.all([loadStats(), loadRaw(), loadMetrics(), loadChart(), loadAlerts(), loadMaintenance()]);
+        document.getElementById('last-updated-ts').textContent =
+            'Updated: ' + new Date().toLocaleTimeString();
+    }
+
+    // Auto-refresh every 15 seconds
+    loadAll();
+    setInterval(loadAll, 15000);
+</script>
+
+</body>
+</html>

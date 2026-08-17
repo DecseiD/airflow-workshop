@@ -1,0 +1,40 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Local env / secrets
+.env
+.env.*
+*.local
+
+# Airflow local runtime artifacts
+01_install/logs/
+01_install/plugins/__pycache__/
+01_install/dags/__pycache__/
+01_install/config/*.pid
+
+# Workshop generated artifacts
+k8s_version/**/__pycache__/
+k8s_version/**/*.pyc
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temp files
+*.tmp
+*.swp
+
+# Agent instructions
+agent_instruction.xml

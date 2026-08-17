@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Airflow AKS Workshop Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background:#0b1020; color:#e5e7eb; font-family:Inter,system-ui; margin:0; padding:20px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .card { background:#111827; border:1px solid #1f2937; border-radius:12px; padding:14px; }
+    .title { font-weight:700; margin-bottom:10px; }
+    .err { color:#f87171; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    td,th { border-bottom:1px solid #1f2937; padding:6px; text-align:left; }
+  </style>
+</head>
+<body>
+  <h2>IoT Telemetry ETL Dashboard (AKS)</h2>
+  <div id="ts">Loading...</div>
+  <div class="grid">
+    <div class="card"><div class="title">Before Airflow — Raw</div><div id="raw"></div></div>
+    <div class="card"><div class="title">After Airflow — Metrics</div><div id="metrics"></div></div>
+    <div class="card"><div class="title">Processed — Temperature Profile</div><canvas id="chart"></canvas></div>
+    <div class="card"><div class="title">Alerts (>75°C)</div><div id="alerts"></div></div>
+  </div>
+  <script>
+    const API = (() => {
+      const override = new URLSearchParams(window.location.search).get('api');
+      const base = override || `${window.location.protocol}//${window.location.hostname}:5000`;
+      return base.replace(/\/$/, '');
+    })();
+
+    let chart;
+
+    async function j(path) {
+      const r = await fetch(API + path);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    async function load() {
+      document.getElementById('ts').textContent = 'Updated ' + new Date().toLocaleTimeString();
+      try {
+        const raw = await j('/api/raw-readings');
+        document.getElementById('raw').innerHTML = '<table><tr><th>device</th><th>temp</th><th>processed</th></tr>' +
+          raw.slice(0,8).map(r => `<tr><td>${r.device_id}</td><td>${r.temperature_celsius}</td><td>${r.processed}</td></tr>`).join('') + '</table>';
+      } catch { document.getElementById('raw').innerHTML = '<div class="err">API unavailable</div>'; }
+
+      try {
+        const m = await j('/api/metrics');
+        document.getElementById('metrics').innerHTML = m.length
+          ? m.map(x => `<div>${x.device_id}: avg ${x.avg_temperature}°C (max ${x.max_temperature}°C)</div>`).join('')
+          : '<div>No metrics yet</div>';
+
+        const raw = await j('/api/raw-readings');
+        const by = {};
+        raw.forEach(r => { (by[r.device_id] = by[r.device_id] || []).push(Number(r.temperature_celsius)); });
+        const labels = Array.from({length: Math.max(1, ...Object.values(by).map(v => v.length))}, (_,i)=>`#${i+1}`);
+        const ds = Object.entries(by).map(([k,v], i) => ({ label:k, data:v, borderColor:['#22d3ee','#a78bfa','#34d399','#f59e0b'][i%4] }));
+        if (chart) chart.destroy();
+        chart = new Chart(document.getElementById('chart'), { type:'line', data:{labels, datasets:ds}, options:{plugins:{legend:{labels:{color:'#9ca3af'}}}, scales:{x:{ticks:{color:'#6b7280'}}, y:{ticks:{color:'#6b7280'}}}}});
+      } catch { document.getElementById('metrics').innerHTML = '<div class="err">API unavailable</div>'; }
+
+      try {
+        const alerts = await j('/api/alerts');
+        document.getElementById('alerts').innerHTML = alerts.length
+          ? alerts.slice(0,8).map(a => `<div>${a.device_id} ${a.metric_value}°C (${a.severity})</div>`).join('')
+          : '<div>No alerts</div>';
+      } catch { document.getElementById('alerts').innerHTML = '<div class="err">API unavailable</div>'; }
+    }
+
+    load();
+    setInterval(load, 15000);
+  </script>
+</body>
+</html>

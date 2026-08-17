@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: iot-telemetry-db
+  labels:
+    app: iot-telemetry-db
+spec:
+  serviceName: iot-telemetry-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-telemetry-db
+  template:
+    metadata:
+      labels:
+        app: iot-telemetry-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: iot_user
+            - name: POSTGRES_PASSWORD
+              value: iot_password
+            - name: POSTGRES_DB
+              value: iot_telemetry
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init
+          configMap:
+            name: iot-telemetry-init-sql
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi

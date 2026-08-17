@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  git-sync:
+    image: registry.k8s.io/git-sync/git-sync:v4.3.0
+    container_name: airflow_git_sync
+    restart: always
+    env_file:
+      - ../05_git_based_dag_retrieval/.env.git-sync
+    environment:
+      GIT_SYNC_ROOT: /dags
+      GIT_SYNC_DEST: repo
+      GIT_SYNC_LINK: current
+      GIT_SYNC_ONE_TIME: "false"
+      GIT_KNOWN_HOSTS: "false"
+    volumes:
+      - ../01_install/dags:/dags
+    command: ["--verbose=3"]
+    networks:
+      - airflow-net
+
+networks:
+  airflow-net:
+    external: true
+    name: airflow-net
