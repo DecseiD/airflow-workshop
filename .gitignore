@@ -15,6 +15,7 @@ env/
 .env
 .env.*
 *.local
+!.env.git-sync.example
 
 # Airflow local runtime artifacts
 01_install/logs/

@@ -45,7 +45,7 @@ DAG Repo (Git) -> git-sync container -> ./01_install/dags -> Airflow scheduler/w
 Create `airflow/05_git_based_dag_retrieval/.env.git-sync` from the example:
 
 ```bash
-cp airflow/05_git_based_dag_retrieval/.env.git-sync.example airflow/05_git_based_dag_retrieval/.env.git-sync
+cp .env.git-sync.example .env.git-sync
 ```
 
 Edit values:
