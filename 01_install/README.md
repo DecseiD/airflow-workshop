@@ -80,6 +80,9 @@ docker compose logs -f
 # resource usage
 docker stats airflow_webserver airflow_scheduler airflow_postgres
 
+# Trigger DAG reserialization. Might require UI restart.
+docker compose exec airflow-scheduler airflow dags reserialize
+
 # airflow CLI
 docker compose exec airflow-webserver airflow dags list
 

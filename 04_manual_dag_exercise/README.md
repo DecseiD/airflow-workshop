@@ -36,7 +36,6 @@ On your host terminal:
 ```bash
 docker exec -it iot_telemetry_db psql -U iot_user -d iot_telemetry -c "TABLE sensor_maintenance_queue;"
 ```
-*(Expected Result: `ERROR: relation "sensor_maintenance_queue" does not exist` or `0 rows`)*
 
 ---
 
