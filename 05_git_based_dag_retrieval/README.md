@@ -48,11 +48,12 @@ Create `airflow-workshop/05_git_based_dag_retrieval/.env.git-sync` from the exam
 cp .env.git-sync.example .env.git-sync
 ```
 
-Edit values:
-- `GIT_SYNC_REPO`
-- `GIT_SYNC_BRANCH`
-- `GIT_SYNC_PERIOD`
-- `GIT_SYNC_SUBPATH`
+Edit values (git-sync v4 keys):
+- `GITSYNC_REPO`
+- `GITSYNC_REF`
+- `GITSYNC_PERIOD`
+
+> Note: `GIT_SYNC_SUBPATH` is not supported by git-sync v4 in this compose flow. Airflow reads DAGs recursively from the synced repo tree under `01_install/dags/repo`.
 
 ---
 
@@ -61,6 +62,13 @@ Edit values:
 From `airflow-workshop/01_install`:
 
 ```bash
+# prevent parser loops + duplicate DAG imports from non-local paths
+cat > dags/.airflowignore <<'EOF'
+.git-sync-root
+repo/k8s_version/.*
+repo/02_usecase_etl/dags/minimal_etl.py
+EOF
+
 docker compose \
   -f docker-compose.yaml \
   -f ../05_git_based_dag_retrieval/docker-compose.git-sync.yaml \
@@ -104,7 +112,7 @@ Expected result: DAGs from the Git repo become visible in Airflow UI without man
 ## 8) Common failure cases
 
 - **Repo auth fails** -> validate SSH key mount / token and known_hosts.
-- **DAG not visible** -> verify `GIT_SYNC_SUBPATH` and scheduler import errors:
+- **DAG not visible** -> verify git-sync v4 keys (`GITSYNC_REPO`, `GITSYNC_REF`, `GITSYNC_PERIOD`) and scheduler import errors:
 
 ```bash
 docker compose -f airflow-workshop/01_install/docker-compose.yaml exec airflow-scheduler airflow dags list-import-errors

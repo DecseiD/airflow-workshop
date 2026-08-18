@@ -1,0 +1,3 @@
+.git-sync-root
+repo/k8s_version/.*
+repo/02_usecase_etl/dags/minimal_etl.py
