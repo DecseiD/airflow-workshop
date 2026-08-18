@@ -11,14 +11,10 @@ Dataset URI used in this workshop:
 
 ---
 
-## 1) Stage DAG files into Airflow DAG folder
+## 1) DAG availability assumption
 
-From repo root:
-
-```bash
-mkdir -p 01_install/dags/07_datasets_orchestration
-cp 07_datasets_orchestration/dags/*.py 01_install/dags/07_datasets_orchestration/
-```
+If Module 05 git-sync is enabled, these DAGs are already synced from the repo.
+No manual copy step is required.
 
 ---
 

@@ -121,7 +121,7 @@ docker compose exec airflow-webserver airflow dags trigger iot_telemetry_etl
 # Validate API health
 curl http://localhost:5000/api/health
 
-# Optional Module 07 dataset demo (after copying module DAGs into 01_install/dags/07_datasets_orchestration)
+# Optional Module 07 dataset demo (Module 05 git-sync already provides DAG files)
 docker compose exec airflow-webserver airflow dags trigger dataset_arrival_producer_local
 
 # Optional Module 06 monitoring stack
