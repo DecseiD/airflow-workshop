@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  airflow-webserver:
+    environment:
+      AIRFLOW__METRICS__STATSD_ON: "True"
+      AIRFLOW__METRICS__STATSD_HOST: statsd-exporter
+      AIRFLOW__METRICS__STATSD_PORT: 9125
+      AIRFLOW__METRICS__STATSD_PREFIX: airflow
+
+  airflow-scheduler:
+    environment:
+      AIRFLOW__METRICS__STATSD_ON: "True"
+      AIRFLOW__METRICS__STATSD_HOST: statsd-exporter
+      AIRFLOW__METRICS__STATSD_PORT: 9125
+      AIRFLOW__METRICS__STATSD_PREFIX: airflow
+
+  airflow-triggerer:
+    environment:
+      AIRFLOW__METRICS__STATSD_ON: "True"
+      AIRFLOW__METRICS__STATSD_HOST: statsd-exporter
+      AIRFLOW__METRICS__STATSD_PORT: 9125
+      AIRFLOW__METRICS__STATSD_PREFIX: airflow
+
+  statsd-exporter:
+    image: prom/statsd-exporter:v0.27.2
+    container_name: airflow_statsd_exporter
+    command:
+      - --statsd.listen-udp=:9125
+      - --web.listen-address=:9102
+    ports:
+      - "9102:9102"
+    networks:
+      - airflow-net
+    restart: always
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: airflow_prometheus
+    volumes:
+      - ../06_monitoring_airflow/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=24h
+    networks:
+      - airflow-net
+    restart: always
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: airflow_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ../06_monitoring_airflow/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../06_monitoring_airflow/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3002:3000"
+    networks:
+      - airflow-net
+    depends_on:
+      - prometheus
+    restart: always

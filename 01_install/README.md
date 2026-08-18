@@ -26,7 +26,7 @@ Welcome to Module 01. In this section, you set up a multi-container Apache Airfl
 
 ### Step 1: Navigate to module folder
 ```bash
-cd airflow/01_install
+cd airflow-workshop/01_install
 ```
 
 ### Step 2: Prepare mounts and UID mapping

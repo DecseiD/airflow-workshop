@@ -90,3 +90,4 @@ iot_telemetry_etl | manual__<timestamp>                  | success
 | **03** | [`03_operational_painpoints/`](./03_operational_painpoints/README.md) | Operational troubleshooting guide |
 | **04** | [`04_manual_dag_exercise/`](./04_manual_dag_exercise/README.md) | Manual DAG creation exercise |
 | **05** | [`05_git_based_dag_retrieval/`](./05_git_based_dag_retrieval/README.md) | Git-based DAG retrieval workflow demo |
+| **06** | [`06_monitoring_airflow/`](./06_monitoring_airflow/README.md) | Lightweight Airflow monitoring (Prometheus + Grafana) |

@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "Airflow Workshop Dashboards"
+    orgId: 1
+    folder: "Airflow Workshop"
+    type: file
+    disableDeletion: true
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

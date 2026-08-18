@@ -67,3 +67,24 @@ kubectl exec -n airflow deploy/airflow-scheduler -c scheduler -- airflow dags li
 Expected:
 - `git-sync` shows successful sync cycles and commit updates.
 - DAGs from the configured Git repo appear in Airflow without manual `kubectl cp`.
+
+## 9) Module 06 monitoring checks
+
+```bash
+helm upgrade --install airflow apache-airflow/airflow \
+  -n airflow \
+  -f 01_install/values-airflow.yaml \
+  -f 06_monitoring_airflow/values-airflow-monitoring.yaml
+
+helm upgrade --install workshop-monitoring prometheus-community/kube-prometheus-stack \
+  -n airflow \
+  -f 06_monitoring_airflow/values-kube-prometheus-stack.yaml
+
+kubectl get pods -n airflow | grep -E "statsd|prometheus|grafana"
+kubectl port-forward -n airflow svc/workshop-monitoring-grafana 3002:80
+```
+
+Expected:
+- Airflow emits StatsD metrics through exporter pods/services.
+- Prometheus + Grafana pods are healthy.
+- Grafana is reachable on `http://localhost:3002`.

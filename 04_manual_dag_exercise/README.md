@@ -43,7 +43,7 @@ docker exec -it iot_telemetry_db psql -U iot_user -d iot_telemetry -c "TABLE sen
 Run `init_maintenance_schema.sql` to create the target table in PostgreSQL:
 
 ```bash
-cd airflow/04_manual_dag_exercise
+cd airflow-workshop/04_manual_dag_exercise
 docker exec -i iot_telemetry_db psql -U iot_user -d iot_telemetry < init_maintenance_schema.sql
 ```
 

@@ -73,6 +73,14 @@ All workshop services run on your local lab host.
   2. Developer flow: commit/push -> sync interval -> scheduler parse -> DAG appears.
   3. Triage path: auth failures, wrong branch/subpath, DAG import errors.
 
+### Phase 6: Monitoring Airflow (Minutes 75–85, optional extension)
+- **Goal:** Demonstrate lightweight observability with Prometheus + Grafana.
+- **Module Document:** [`06_monitoring_airflow/README.md`](./06_monitoring_airflow/README.md)
+- **Talking Points:**
+  1. Airflow emits metrics via StatsD exporter.
+  2. Prometheus scrapes metrics and Grafana visualizes scheduler/task behavior.
+  3. Workshop focus: practical visibility and triage, not full SRE platform complexity.
+
 ---
 
 ## 🛠️ Presenter Command Cheat Sheet
@@ -96,4 +104,8 @@ docker compose exec airflow-webserver airflow dags trigger iot_telemetry_etl
 
 # Validate API health
 curl http://localhost:5000/api/health
+
+# Optional Module 06 monitoring stack
+cd ../01_install
+docker compose -f docker-compose.yaml -f ../06_monitoring_airflow/docker-compose.monitoring.yaml up -d
 ```

@@ -9,7 +9,7 @@ The dashboard refreshes every 15 seconds so inserted data and DAG outputs are vi
 ## 1. Build and launch services
 
 ```bash
-cd airflow/02_usecase_etl
+cd airflow-workshop/02_usecase_etl
 docker compose -f docker-compose-db.yaml up -d --build
 ```
 
@@ -45,7 +45,7 @@ Panels shown:
 ## 4. Generate live data (`add_sensor_data.py`)
 
 ```bash
-cd airflow/02_usecase_etl
+cd airflow-workshop/02_usecase_etl
 
 # normal batch
 python3 add_sensor_data.py
@@ -71,7 +71,7 @@ python3 add_sensor_data.py --reset
 
 ## 5. Register `iot_db_conn` in Airflow
 
-Run from `airflow/01_install` folder:
+Run from `airflow-workshop/01_install` folder:
 
 ```bash
 docker compose exec airflow-webserver airflow connections add 'iot_db_conn' \

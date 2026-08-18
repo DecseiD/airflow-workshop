@@ -42,7 +42,7 @@ DAG Repo (Git) -> git-sync container -> ./01_install/dags -> Airflow scheduler/w
 
 ## 4) Configure git-sync env file
 
-Create `airflow/05_git_based_dag_retrieval/.env.git-sync` from the example:
+Create `airflow-workshop/05_git_based_dag_retrieval/.env.git-sync` from the example:
 
 ```bash
 cp .env.git-sync.example .env.git-sync
@@ -58,7 +58,7 @@ Edit values:
 
 ## 5) Start git-sync overlay
 
-From `airflow/01_install`:
+From `airflow-workshop/01_install`:
 
 ```bash
 docker compose \
@@ -80,10 +80,10 @@ docker compose -f docker-compose.yaml -f ../05_git_based_dag_retrieval/docker-co
 
 ```bash
 # Verify files synced into local DAG mount
-ls -la airflow/01_install/dags
+ls -la airflow-workshop/01_install/dags
 
 # Verify Airflow can see DAGs
-docker compose -f airflow/01_install/docker-compose.yaml exec airflow-scheduler airflow dags list
+docker compose -f airflow-workshop/01_install/docker-compose.yaml exec airflow-scheduler airflow dags list
 ```
 
 Expected result: DAGs from the Git repo become visible in Airflow UI without manual copy.
@@ -107,7 +107,7 @@ Expected result: DAGs from the Git repo become visible in Airflow UI without man
 - **DAG not visible** -> verify `GIT_SYNC_SUBPATH` and scheduler import errors:
 
 ```bash
-docker compose -f airflow/01_install/docker-compose.yaml exec airflow-scheduler airflow dags list-import-errors
+docker compose -f airflow-workshop/01_install/docker-compose.yaml exec airflow-scheduler airflow dags list-import-errors
 ```
 
 - **Wrong branch/tag** -> validate `GIT_SYNC_BRANCH` and `GIT_SYNC_REV` settings.

@@ -12,6 +12,7 @@ It keeps the same learning structure and ETL logic, but deploys Airflow and work
 - `03_operational_painpoints/` — Production troubleshooting on Kubernetes
 - `04_manual_dag_exercise/` — Manual DAG exercise for maintenance queue classification
 - `05_git_based_dag_retrieval/` — Git-based DAG delivery workflow (production-like)
+- `06_monitoring_airflow/` — Lightweight Airflow monitoring on AKS (Prometheus + Grafana)
 - `walkthrough.md` — end-to-end run/verification log
 
 ## Quick start (high-level)
@@ -22,5 +23,6 @@ It keeps the same learning structure and ETL logic, but deploys Airflow and work
 4. Deploy IoT DB/API/dashboard manifests from `02_usecase_etl/k8s/`.
 5. Add `iot_db_conn` in Airflow and trigger the DAGs.
 6. Enable Module 05 git-based DAG retrieval flow for production-like delivery behavior.
+7. Enable Module 06 monitoring stack for Airflow metrics visibility.
 
 See module READMEs for exact commands.
