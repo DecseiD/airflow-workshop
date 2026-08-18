@@ -81,13 +81,16 @@ iot_telemetry_etl | manual__<timestamp>                  | success
 
 ---
 
-## 📚 Module Inventory
+## 📚 Module Inventory (Recommended Execution Order)
 
-| Module | Folder | Purpose |
-| :--- | :--- | :--- |
-| **01** | [`01_install/`](./01_install/README.md) | Docker Compose Airflow core setup |
-| **02** | [`02_usecase_etl/`](./02_usecase_etl/README.md) | IoT TaskFlow ETL + API + dashboard |
-| **03** | [`03_operational_painpoints/`](./03_operational_painpoints/README.md) | Operational troubleshooting guide |
-| **04** | [`04_manual_dag_exercise/`](./04_manual_dag_exercise/README.md) | Manual DAG creation exercise |
-| **05** | [`05_git_based_dag_retrieval/`](./05_git_based_dag_retrieval/README.md) | Git-based DAG retrieval workflow demo |
-| **06** | [`06_monitoring_airflow/`](./06_monitoring_airflow/README.md) | Lightweight Airflow monitoring (Prometheus + Grafana) |
+Recommended sequence: `01 -> 02 -> 04 -> 05 -> 07 -> 06 -> 03`.
+
+| Order | Module | Folder | Purpose |
+| :--- | :--- | :--- | :--- |
+| **1** | **01** | [`01_install/`](./01_install/README.md) | Docker Compose Airflow core setup |
+| **2** | **02** | [`02_usecase_etl/`](./02_usecase_etl/README.md) | IoT TaskFlow ETL + API + dashboard |
+| **3** | **04** | [`04_manual_dag_exercise/`](./04_manual_dag_exercise/README.md) | Manual DAG creation exercise |
+| **4** | **05** | [`05_git_based_dag_retrieval/`](./05_git_based_dag_retrieval/README.md) | Git-based DAG retrieval workflow demo |
+| **5** | **07** | [`07_datasets_orchestration/`](./07_datasets_orchestration/README.md) | Airflow Dataset producer/consumer orchestration demo |
+| **6** | **06** | [`06_monitoring_airflow/`](./06_monitoring_airflow/README.md) | Lightweight Airflow monitoring (Prometheus + Grafana) |
+| **7** | **03** | [`03_operational_painpoints/`](./03_operational_painpoints/README.md) | Capstone operational troubleshooting guide |

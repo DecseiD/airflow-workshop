@@ -55,8 +55,40 @@ All workshop services run on your local lab host.
   3. Show metrics, chart, alerts, and maintenance queue updates.
   4. If API is unreachable, verify `http://localhost:5000/api/health` (or use `?api=http://<HOST_IP>:5000`).
 
-### Phase 4: Operational Pain Points (Minutes 45–60)
-- **Goal:** Teach practical failure-mode handling.
+### Phase 4: Manual DAG Exercise (Minutes 45–60)
+- **Goal:** Show live DAG onboarding and immediate business impact.
+- **Module Document:** [`04_manual_dag_exercise/README.md`](./04_manual_dag_exercise/README.md)
+- **Talking Points:**
+  1. Copy new DAG into `01_install/dags/`.
+  2. Enable + trigger DAG in Airflow UI.
+  3. Show maintenance queue before/after in PostgreSQL.
+
+### Phase 5: Git-Based DAG Retrieval (Minutes 60–72, optional extension)
+- **Goal:** Showcase production-like developer flow for DAG delivery.
+- **Module Document:** [`05_git_based_dag_retrieval/README.md`](./05_git_based_dag_retrieval/README.md)
+- **Talking Points:**
+  1. DAGs are retrieved from Git through a sync mechanism rather than manual copy.
+  2. Developer flow: commit/push -> sync interval -> scheduler parse -> DAG appears.
+  3. Triage path: auth failures, wrong branch/subpath, DAG import errors.
+
+### Phase 6: Dataset-Driven Orchestration (Minutes 72–80, optional extension)
+- **Goal:** Demonstrate Airflow Dataset scheduling in the UI.
+- **Module Document:** [`07_datasets_orchestration/README.md`](./07_datasets_orchestration/README.md)
+- **Talking Points:**
+  1. Trigger producer DAG and emit dataset event.
+  2. Confirm dataset update in **Datasets** UI.
+  3. Show consumer DAG auto-triggered by dataset.
+
+### Phase 7: Monitoring Airflow (Minutes 80–88, optional extension)
+- **Goal:** Demonstrate lightweight observability with Prometheus + Grafana.
+- **Module Document:** [`06_monitoring_airflow/README.md`](./06_monitoring_airflow/README.md)
+- **Talking Points:**
+  1. Airflow emits metrics via StatsD exporter.
+  2. Prometheus scrapes metrics and Grafana visualizes scheduler/task behavior.
+  3. Workshop focus: practical visibility and triage, not full SRE platform complexity.
+
+### Phase 8: Operational Pain Points (Minutes 88–95, capstone)
+- **Goal:** End with structured troubleshooting and production failure modes.
 - **Module Document:** [`03_operational_painpoints/troubleshooting_guide.md`](./03_operational_painpoints/troubleshooting_guide.md)
 - **Talking Points:**
   1. Missing DAGs / import errors.
@@ -65,29 +97,13 @@ All workshop services run on your local lab host.
   4. Security/log-isolation concerns in shared environments.
   5. Single-node resource hygiene (memory, logs, disk pressure).
 
-### Phase 5: Git-Based DAG Retrieval (Minutes 60–75, optional extension)
-- **Goal:** Showcase production-like developer flow for DAG delivery.
-- **Module Document:** [`05_git_based_dag_retrieval/README.md`](./05_git_based_dag_retrieval/README.md)
-- **Talking Points:**
-  1. DAGs are retrieved from Git through a sync mechanism rather than manual copy.
-  2. Developer flow: commit/push -> sync interval -> scheduler parse -> DAG appears.
-  3. Triage path: auth failures, wrong branch/subpath, DAG import errors.
-
-### Phase 6: Monitoring Airflow (Minutes 75–85, optional extension)
-- **Goal:** Demonstrate lightweight observability with Prometheus + Grafana.
-- **Module Document:** [`06_monitoring_airflow/README.md`](./06_monitoring_airflow/README.md)
-- **Talking Points:**
-  1. Airflow emits metrics via StatsD exporter.
-  2. Prometheus scrapes metrics and Grafana visualizes scheduler/task behavior.
-  3. Workshop focus: practical visibility and triage, not full SRE platform complexity.
-
 ---
 
 ## 🛠️ Presenter Command Cheat Sheet
 
 ```bash
 # Enter project
-cd airflow
+cd airflow-workshop
 
 # Start Module 01 Airflow core stack
 cd 01_install
@@ -104,6 +120,9 @@ docker compose exec airflow-webserver airflow dags trigger iot_telemetry_etl
 
 # Validate API health
 curl http://localhost:5000/api/health
+
+# Optional Module 07 dataset demo (after copying module DAGs into 01_install/dags/07_datasets_orchestration)
+docker compose exec airflow-webserver airflow dags trigger dataset_arrival_producer_local
 
 # Optional Module 06 monitoring stack
 cd ../01_install

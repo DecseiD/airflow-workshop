@@ -78,4 +78,4 @@ In Grafana, open dashboard: **Airflow Workshop Overview**.
 - No Alertmanager dependency in local module.
 - Single Prometheus + single Grafana instance.
 
-Use Module 03 + k8s Module 06 for deeper production alerting discussion.
+Use Module 03 (capstone) for deeper production troubleshooting discussion.

@@ -88,3 +88,8 @@ Expected:
 - Airflow emits StatsD metrics through exporter pods/services.
 - Prometheus + Grafana pods are healthy.
 - Grafana is reachable on `http://localhost:3002`.
+
+## 10) Module 03 capstone troubleshooting review
+
+- Review `03_operational_painpoints/troubleshooting_guide.md`.
+- Use `03_operational_painpoints/known_issues.md` as your incident triage checklist.

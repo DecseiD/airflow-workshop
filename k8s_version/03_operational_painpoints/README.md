@@ -1,5 +1,7 @@
 # 03_operational_painpoints — AKS edition
 
+> Recommended placement in this workshop: **final capstone module** after monitoring.
+
 Focus areas for production readiness:
 
 - DAG import failures and scheduler liveness

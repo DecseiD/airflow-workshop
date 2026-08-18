@@ -1,5 +1,7 @@
 # Module 03: Operational Pain Points & Production Troubleshooting
 
+> Recommended placement in this workshop: **final capstone module** after monitoring.
+
 Welcome to Module 03 of the Apache Airflow Workshop! Running Apache Airflow in enterprise production environments brings unique challenges around scheduler latency, UI scaling, local vs remote developer feedback loops, and security isolation.
 
 This module provides senior-level operational insights and practical solutions to common production failure modes.
