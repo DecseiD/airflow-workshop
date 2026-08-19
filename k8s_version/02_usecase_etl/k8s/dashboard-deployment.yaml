@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: dashboard
-          image: <registry>/airflow-dashboard:latest
+          image: cheesecakeslice/airflow-dashboard:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80

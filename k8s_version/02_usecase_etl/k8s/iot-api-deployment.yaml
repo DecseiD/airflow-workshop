@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: iot-api
-          image: <registry>/iot-api:latest
+          image: cheesecakeslice/airflow-workshop:v1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
