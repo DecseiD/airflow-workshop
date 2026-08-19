@@ -21,7 +21,7 @@ It keeps the same learning structure and ETL logic, but deploys Airflow and work
 2. Deploy Airflow with Helm using `01_install/values-airflow.yaml`.
 3. Access Airflow UI via webserver `LoadBalancer` external IP (or ingress, if configured).
 4. Configure Airflow Web UI SSO via Azure Entra ID secrets + redirect URI (`/oauth-authorized`).
-5. Deploy IoT DB/API/dashboard manifests from `02_usecase_etl/k8s/` and configure host mapping for `api.local` + `dashboard.local`.
+5. Deploy IoT DB/API/dashboard manifests from `02_usecase_etl/k8s/`, then run Module 02 with port-forward (`localhost:8081` dashboard + `localhost:5000` API) for workshop-stable access.
 6. Add `iot_db_conn` in Airflow and trigger the DAGs.
 7. Run Module 04 manual DAG exercise.
 8. Enable Module 05 git-based DAG retrieval flow for production-like delivery behavior.

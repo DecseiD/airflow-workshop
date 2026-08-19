@@ -37,16 +37,33 @@ kubectl apply -n airflow -f k8s/dashboard-service.yaml
 kubectl apply -n airflow -f k8s/ingress.yaml
 ```
 
-## 3) Ingress host mapping (required for `api.local` / `dashboard.local`)
+## 3) Workshop demo access (port-forward, recommended)
 
-This module ingress is host-based (`api.local`, `dashboard.local`). Add local host mappings to your ingress/LB IP:
+For workshop reliability, use local port-forward instead of host-based ingress.
+
+In two terminals:
+
+```bash
+kubectl port-forward -n airflow svc/airflow-dashboard 8081:80
+kubectl port-forward -n airflow svc/iot-api 5000:5000
+```
+
+Open dashboard with explicit API override:
+
+```text
+http://localhost:8081/?api=http://localhost:5000
+```
+
+This avoids DNS/host-file/ingress-controller dependencies during the demo.
+
+### Optional alternative: ingress host mapping
+
+If you prefer host-based ingress, map these hosts to your ingress/LB IP:
 
 ```text
 <INGRESS_OR_LB_IP> api.local
 <INGRESS_OR_LB_IP> dashboard.local
 ```
-
-Without this mapping, dashboard/API reachability checks will fail even when pods are healthy.
 
 ## 4) Deploy DAG to Airflow
 
@@ -64,13 +81,12 @@ kubectl cp dags/minimal_etl.py airflow/$SCHED:/opt/airflow/dags/minimal_etl.py
 ```bash
 kubectl get pods -n airflow
 kubectl get svc -n airflow
-kubectl get ingress -n airflow
-curl -sS http://api.local/api/health
+curl -sS http://localhost:5000/api/health
 ```
 
 Expected:
 - API health returns `{"status":"ok"}`
-- Dashboard reachable with API override at `http://dashboard.local/?api=http://api.local`
+- Dashboard reachable with API override at `http://localhost:8081/?api=http://localhost:5000`
 
 ## 6) Insert sample data
 
@@ -84,7 +100,7 @@ python add_sensor_data.py --anomaly
 ## 7) Run demo flow
 
 1. Trigger DAG `iot_telemetry_etl` in Airflow UI.
-2. Open dashboard: `http://dashboard.local/?api=http://api.local`
+2. Open dashboard: `http://localhost:8081/?api=http://localhost:5000`
 3. Validate raw/metrics/alerts panels update.
 
 ## 8) Troubleshooting notes from working AKS run
@@ -100,14 +116,17 @@ ${window.location.protocol}//${window.location.hostname}:5000
 If dashboard is opened on `dashboard.local`, that points to `dashboard.local:5000` (wrong target for API).
 
 Use one of these:
-- Preferred (host-based ingress): ensure `api.local` resolves correctly and open dashboard with API override:
+- Preferred (workshop): local port-forward override:
+  - `http://localhost:8081/?api=http://localhost:5000`
+- Optional host-based ingress override:
   - `http://dashboard.local/?api=http://api.local`
-- Or direct API endpoint override:
   - `http://dashboard.local/?api=http://<api-reachable-host>:5000`
 
 ### B) Pods healthy but URLs fail
 
-Usually missing host mapping for ingress hosts (`api.local`, `dashboard.local`).
+For workshop mode, verify both port-forwards are running (`8081->dashboard`, `5000->iot-api`).
+
+For ingress mode, this is usually missing host mapping for ingress hosts (`api.local`, `dashboard.local`).
 
 ### C) Data does not appear after API is healthy
 

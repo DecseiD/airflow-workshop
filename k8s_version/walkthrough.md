@@ -35,15 +35,24 @@ Expected:
 kubectl get pods -n airflow -l app=iot-telemetry-db
 kubectl get pods -n airflow -l app=iot-api
 kubectl get pods -n airflow -l app=airflow-dashboard
-kubectl get ingress -n airflow
+kubectl get svc -n airflow | grep -E "iot-api|airflow-dashboard"
 ```
 
-## 5) API checks
+## 5) Workshop port-forward access (recommended)
+
+Run in separate terminals:
 
 ```bash
-curl -sS http://<api-host>/api/health
-curl -sS http://<api-host>/api/metrics
-curl -sS http://<api-host>/api/alerts
+kubectl port-forward -n airflow svc/airflow-dashboard 8081:80
+kubectl port-forward -n airflow svc/iot-api 5000:5000
+```
+
+Then verify API locally:
+
+```bash
+curl -sS http://localhost:5000/api/health
+curl -sS http://localhost:5000/api/metrics
+curl -sS http://localhost:5000/api/alerts
 ```
 
 ## 6) Airflow DAG checks
@@ -53,6 +62,7 @@ curl -sS http://<api-host>/api/alerts
 
 ## 7) Dashboard checks
 
+- Open `http://localhost:8081/?api=http://localhost:5000`.
 - Dashboard loads.
 - Raw log panel populates.
 - Metrics + Alerts panels do not show `API unavailable`.
