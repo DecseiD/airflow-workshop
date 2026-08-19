@@ -1,6 +1,6 @@
-# Module 06: Monitoring Airflow on AKS (Balanced Workshop Profile)
+# Module 06: Monitoring Airflow on AKS (Workshop Lightweight)
 
-This module adds a lightweight but production-style monitoring layer for the AKS workshop:
+This optional module adds a lightweight monitoring layer for the AKS workshop:
 
 - Airflow metrics via **StatsD exporter** (Airflow Helm chart)
 - Cluster metrics via **kube-prometheus-stack** (Prometheus + Grafana)

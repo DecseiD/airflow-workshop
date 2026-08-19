@@ -1,15 +1,15 @@
 # 03_operational_painpoints — AKS edition
 
-> Recommended placement in this workshop: **final capstone module** after monitoring.
+> Recommended placement in this workshop: **final optional capstone** after monitoring.
 
-Focus areas for production readiness:
+Focus areas for troubleshooting practice:
 
 - DAG import failures and scheduler liveness
-- Webserver scaling and ingress timeouts
+- Webserver behavior and request timeout issues
 - Metadata DB connectivity and secrets drift
 - Workload identity / RBAC access issues
 - Log retention and storage pressure
-- Rolling updates and zero-downtime concerns
+- Rolling update behavior
 
 See `troubleshooting_guide.md` for concrete triage commands.
 

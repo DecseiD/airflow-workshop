@@ -7,7 +7,6 @@ This module deploys Airflow on an existing AKS cluster with Helm and enables Azu
 - Existing AKS cluster and working `kubectl` context
 - Helm v3
 - Azure Entra app registration for Airflow UI login
-- Optional: NGINX ingress controller (only if you want ingress-based routing)
 
 ## 1) Create namespace + secrets
 
@@ -35,18 +34,16 @@ Notes:
 - This module is pinned to Airflow image/version `2.11.0` in `values-airflow.yaml`.
 - `extraEnv` is intentionally defined as a templated block (`extraEnv: |`) to satisfy chart schema validation while still using Secret `valueFrom` refs.
 
-## 3) Validate pods + external reachability
+## 3) Validate pods + LoadBalancer access
 
 ```bash
 kubectl get pods -n airflow
 kubectl get svc -n airflow
-kubectl get ingress -n airflow
 ```
 
 Expected:
 - `airflow-webserver` service type is `LoadBalancer`.
-- `EXTERNAL-IP` is assigned (workshop quick path).
-- Ingress resources may exist, but ingress access depends on controller availability.
+- `EXTERNAL-IP` is assigned (workshop access path).
 
 ## 4) Azure Entra ID redirect URI
 
@@ -57,8 +54,7 @@ https://<airflow-host>/oauth-authorized
 ```
 
 Examples:
-- `http://<loadbalancer-external-ip>/oauth-authorized` (quick workshop access)
-- `https://airflow.local/oauth-authorized` (if ingress + DNS/TLS are configured)
+- `http://<loadbalancer-external-ip>:8080/oauth-authorized` (recommended for this workshop)
 
 This follows the official FAB SSO guide for Airflow provider auth manager.
 
@@ -75,7 +71,7 @@ If you change service name/namespace, update this URI.
 Based on live troubleshooting results, this module now includes:
 - `defaultAirflowTag` and `airflowVersion` bumped to `2.11.0`.
 - `logs.persistence.enabled: false` (avoids RWX/RWO storage conflict in workshop AKS setups).
-- `webserver.service.type: LoadBalancer` (quick external reachability without depending on ingress controller).
+- `webserver.service.type: LoadBalancer` (quick workshop reachability path).
 - OIDC auto-discovery via `server_metadata_url` for Entra provider config.
 - `AUTH_ROLES_SYNC_AT_LOGIN = False` to avoid login-time role sync issues observed in the workshop path.
 - Ensure Entra app token configuration includes email claim for FAB user identity mapping.

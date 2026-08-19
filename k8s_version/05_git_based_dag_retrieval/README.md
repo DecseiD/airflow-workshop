@@ -1,6 +1,6 @@
-# 05_git_based_dag_retrieval — Production-Style DAG Delivery on AKS
+# 05_git_based_dag_retrieval — Optional Automatic DAG Sync on AKS
 
-This module demonstrates a production-like DAG delivery pattern for Airflow on Kubernetes:
+This optional module demonstrates automatic DAG synchronization into Airflow pods using git-sync.
 
 - developers commit DAG code to a Git repository
 - a sync mechanism (for example `git-sync`) pulls updates into Airflow pods

@@ -34,6 +34,11 @@ kubectl apply -n airflow -f k8s/iot-api-service.yaml
 
 kubectl apply -n airflow -f k8s/dashboard-deployment.yaml
 kubectl apply -n airflow -f k8s/dashboard-service.yaml
+```
+
+Optional (only if you explicitly want host-based ingress):
+
+```bash
 kubectl apply -n airflow -f k8s/ingress.yaml
 ```
 
@@ -54,16 +59,11 @@ Open dashboard with explicit API override:
 http://localhost:8081/?api=http://localhost:5000
 ```
 
-This avoids DNS/host-file/ingress-controller dependencies during the demo.
+This avoids DNS/domain/ingress-controller dependencies during the demo.
 
-### Optional alternative: ingress host mapping
+### Optional ingress mode (not needed for workshop flow)
 
-If you prefer host-based ingress, map these hosts to your ingress/LB IP:
-
-```text
-<INGRESS_OR_LB_IP> api.local
-<INGRESS_OR_LB_IP> dashboard.local
-```
+Only use this if you intentionally want host-based URLs. Otherwise skip ingress completely.
 
 ## 4) Deploy DAG to Airflow
 
@@ -113,20 +113,14 @@ Root cause in this module: dashboard JS defaults API base to:
 ${window.location.protocol}//${window.location.hostname}:5000
 ```
 
-If dashboard is opened on `dashboard.local`, that points to `dashboard.local:5000` (wrong target for API).
+In workshop mode, always open with explicit override:
+- `http://localhost:8081/?api=http://localhost:5000`
 
-Use one of these:
-- Preferred (workshop): local port-forward override:
-  - `http://localhost:8081/?api=http://localhost:5000`
-- Optional host-based ingress override:
-  - `http://dashboard.local/?api=http://api.local`
-  - `http://dashboard.local/?api=http://<api-reachable-host>:5000`
+(Only for optional ingress mode, use host-based override values.)
 
 ### B) Pods healthy but URLs fail
 
 For workshop mode, verify both port-forwards are running (`8081->dashboard`, `5000->iot-api`).
-
-For ingress mode, this is usually missing host mapping for ingress hosts (`api.local`, `dashboard.local`).
 
 ### C) Data does not appear after API is healthy
 

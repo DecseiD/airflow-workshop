@@ -20,7 +20,7 @@ kubectl logs -n airflow deploy/airflow-scheduler --tail=200
 kubectl describe pod -n airflow -l component=scheduler
 ```
 
-## 3. Web UI 502/504 through ingress
+## 3. Web UI 502/504 (optional ingress-only scenario)
 
 ```bash
 kubectl describe ingress -n airflow
