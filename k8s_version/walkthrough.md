@@ -9,19 +9,25 @@ kubectl config current-context
 kubectl get ns
 ```
 
-## 2) Airflow deployment checks
+## 2) Airflow deployment + reachability checks
 
 ```bash
 helm ls -n airflow
 kubectl get pods -n airflow
 kubectl get svc -n airflow
+kubectl get ingress -n airflow
 ```
+
+Expected:
+- `airflow-webserver` service type is `LoadBalancer`.
+- `EXTERNAL-IP` is assigned for direct workshop access.
+- Ingress resources may exist, but ingress access depends on ingress-controller availability.
 
 ## 3) Azure Entra ID SSO checks
 
-- Open Airflow URL from Ingress
-- Confirm **Login with Azure/Entra** button appears
-- Confirm successful redirect/callback
+- Open Airflow URL from webserver `LoadBalancer` external IP (or ingress host if configured).
+- Confirm **Login with Azure/Entra** button appears.
+- Confirm successful redirect/callback to `/oauth-authorized`.
 
 ## 4) ETL stack checks
 

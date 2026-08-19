@@ -6,8 +6,8 @@ This module deploys Airflow on an existing AKS cluster with Helm and enables Azu
 
 - Existing AKS cluster and working `kubectl` context
 - Helm v3
-- NGINX ingress controller (or compatible ingress class)
 - Azure Entra app registration for Airflow UI login
+- Optional: NGINX ingress controller (only if you want ingress-based routing)
 
 ## 1) Create namespace + secrets
 
@@ -31,29 +31,51 @@ helm upgrade --install airflow apache-airflow/airflow \
   -f values-airflow.yaml
 ```
 
-## 3) Validate pods
+Notes:
+- This module is pinned to Airflow image/version `2.11.0` in `values-airflow.yaml`.
+- `extraEnv` is intentionally defined as a templated block (`extraEnv: |`) to satisfy chart schema validation while still using Secret `valueFrom` refs.
+
+## 3) Validate pods + external reachability
 
 ```bash
 kubectl get pods -n airflow
+kubectl get svc -n airflow
 kubectl get ingress -n airflow
 ```
+
+Expected:
+- `airflow-webserver` service type is `LoadBalancer`.
+- `EXTERNAL-IP` is assigned (workshop quick path).
+- Ingress resources may exist, but ingress access depends on controller availability.
 
 ## 4) Azure Entra ID redirect URI
 
 Configure your Entra app redirect URI to:
 
 ```text
-https://airflow.local/oauth-authorized
+https://<airflow-host>/oauth-authorized
 ```
 
-This follows the official FAB SSO guide for Airflow provider auth manager.
+Examples:
+- `http://<loadbalancer-external-ip>/oauth-authorized` (quick workshop access)
+- `https://airflow.local/oauth-authorized` (if ingress + DNS/TLS are configured)
 
-Replace `airflow.local` with your chosen Airflow host in `values-airflow.yaml` ingress config.
+This follows the official FAB SSO guide for Airflow provider auth manager.
 
 ## 5) Airflow connection for ETL DB
 
 After Module 02 DB is deployed, set connection env via Helm values (already included):
 
-- `AIRFLOW_CONN_IOT_DB_CONN=postgresql://iot_user:iot_password@iot-telemetry-db.airflow.svc.cluster.local:5432/iot_telemetry`
+- `AIRFLOW_CONN_IOT_DB_CONN=postgresql://iot_user:***@iot-telemetry-db.airflow.svc.cluster.local:5432/iot_telemetry`
 
 If you change service name/namespace, update this URI.
+
+## 6) Working fixes already reflected in `values-airflow.yaml`
+
+Based on live troubleshooting results, this module now includes:
+- `defaultAirflowTag` and `airflowVersion` bumped to `2.11.0`.
+- `logs.persistence.enabled: false` (avoids RWX/RWO storage conflict in workshop AKS setups).
+- `webserver.service.type: LoadBalancer` (quick external reachability without depending on ingress controller).
+- OIDC auto-discovery via `server_metadata_url` for Entra provider config.
+- `AUTH_ROLES_SYNC_AT_LOGIN = False` to avoid login-time role sync issues observed in the workshop path.
+- Ensure Entra app token configuration includes email claim for FAB user identity mapping.

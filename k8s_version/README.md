@@ -19,12 +19,13 @@ It keeps the same learning structure and ETL logic, but deploys Airflow and work
 
 1. Configure kubectl context to your existing AKS cluster.
 2. Deploy Airflow with Helm using `01_install/values-airflow.yaml`.
-3. Configure Airflow Web UI SSO via Azure Entra ID secrets.
-4. Deploy IoT DB/API/dashboard manifests from `02_usecase_etl/k8s/`.
-5. Add `iot_db_conn` in Airflow and trigger the DAGs.
-6. Run Module 04 manual DAG exercise.
-7. Enable Module 05 git-based DAG retrieval flow for production-like delivery behavior.
-8. Enable Module 06 monitoring stack for Airflow metrics visibility.
-9. Use Module 03 as final troubleshooting capstone.
+3. Access Airflow UI via webserver `LoadBalancer` external IP (or ingress, if configured).
+4. Configure Airflow Web UI SSO via Azure Entra ID secrets + redirect URI (`/oauth-authorized`).
+5. Deploy IoT DB/API/dashboard manifests from `02_usecase_etl/k8s/`.
+6. Add `iot_db_conn` in Airflow and trigger the DAGs.
+7. Run Module 04 manual DAG exercise.
+8. Enable Module 05 git-based DAG retrieval flow for production-like delivery behavior.
+9. Enable Module 06 monitoring stack for Airflow metrics visibility.
+10. Use Module 03 as final troubleshooting capstone.
 
 See module READMEs for exact commands.
