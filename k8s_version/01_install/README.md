@@ -43,8 +43,10 @@ kubectl get ingress -n airflow
 Configure your Entra app redirect URI to:
 
 ```text
-https://airflow.local/oauth-authorized/azure
+https://airflow.local/oauth-authorized
 ```
+
+This follows the official FAB SSO guide for Airflow provider auth manager.
 
 Replace `airflow.local` with your chosen Airflow host in `values-airflow.yaml` ingress config.
 

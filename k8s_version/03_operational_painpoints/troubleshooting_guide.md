@@ -36,7 +36,7 @@ Mitigations:
 ## 4. Entra SSO login fails
 
 Checklist:
-- redirect URI matches Airflow host + `/oauth-authorized/azure`
+- redirect URI matches Airflow host + `/oauth-authorized`
 - tenant/client id/secret are correct in `airflow-entra-auth`
 - webserver config loaded and pod restarted
 
